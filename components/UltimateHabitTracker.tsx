@@ -74,6 +74,9 @@ export function UltimateHabitTracker() {
     return new Date(d.setDate(diff));
   });
 
+  // Daily dashboard active day for mobile selector
+  const [selectedDashboardDayKey, setSelectedDashboardDayKey] = useState<string>(() => getLocalDateString());
+
   // Edit / Add Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
@@ -311,6 +314,14 @@ export function UltimateHabitTracker() {
     return list;
   }, [habits, currentWeekStart]);
 
+  // Sync selectedDashboardDayKey to first day of week when week changes if not already inside the new week
+  useEffect(() => {
+    const exists = dashboardWeekDays.some(d => d.dateKey === selectedDashboardDayKey);
+    if (!exists && dashboardWeekDays.length > 0) {
+      setSelectedDashboardDayKey(dashboardWeekDays[0].dateKey);
+    }
+  }, [currentWeekStart, dashboardWeekDays, selectedDashboardDayKey]);
+
   // Dashboard overall weekly completion stats (Image 3 header)
   const weeklyOverallStats = useMemo(() => {
     let completedTotal = 0;
@@ -341,11 +352,11 @@ export function UltimateHabitTracker() {
   }
 
   return (
-    <div className="w-full h-full flex flex-col bg-[#f6f8fa] text-slate-800 font-sans select-none overflow-hidden">
+    <div className="w-full h-full flex flex-col bg-[#f6f8fa] text-slate-800 font-sans select-none overflow-hidden pb-safe">
       
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed top-6 right-6 z-[250] flex flex-col bg-white border-l-4 border-[#13854e] shadow-lg rounded-md px-4 py-3 min-w-[280px] animate-in slide-in-from-top-5 duration-300">
+        <div className="fixed top-4 right-4 md:top-6 md:right-6 z-[250] flex flex-col bg-white border-l-4 border-[#13854e] shadow-lg rounded-md px-3 py-2 md:px-4 md:py-3 min-w-[240px] md:min-w-[280px] animate-in slide-in-from-top-5 duration-300">
           <div className="text-xs font-black text-slate-800 leading-tight flex items-center gap-1.5">
             <Icons.CheckCircle2 className="w-4 h-4 text-[#13854e]" />
             <span>{toast.message}</span>
@@ -355,22 +366,22 @@ export function UltimateHabitTracker() {
       )}
 
       {/* Main Top Header Controls */}
-      <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-30 shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-[#13854e] flex items-center justify-center text-white shadow-sm font-bold text-sm">
+      <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 z-30 shrink-0">
+        <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex items-center gap-1.5 md:gap-2">
+            <div className="w-8 h-8 rounded bg-[#13854e] flex items-center justify-center text-white shadow-sm font-bold text-sm shrink-0">
               田
             </div>
             <div>
-              <h1 className="text-sm font-bold text-slate-900 tracking-tight leading-none">Automated Dashboard</h1>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Automated Spreadsheet Tracker</p>
+              <h1 className="text-xs md:text-sm font-bold text-slate-900 tracking-tight leading-none">Habits</h1>
+              <p className="text-[8px] md:text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Automated Dashboard</p>
             </div>
           </div>
 
-          <div className="h-6 w-px bg-slate-200" />
+          <div className="hidden md:block h-6 w-px bg-slate-200" />
 
-          {/* Navigation Tabs */}
-          <nav className="flex items-center bg-slate-100 p-1 rounded-lg gap-1">
+          {/* Navigation Tabs (Hidden on mobile, bottom tab bar replaces this) */}
+          <nav className="hidden md:flex items-center bg-slate-100 p-1 rounded-lg gap-1">
             <button
               onClick={() => setActiveTab('grid')}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-bold tracking-tight transition-all ${
@@ -407,22 +418,24 @@ export function UltimateHabitTracker() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Download CSV button matching image download action */}
+        <div className="flex items-center gap-1.5 md:gap-2">
+          {/* Download CSV button */}
           <button
             onClick={handleCSVExport}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg text-[11px] font-bold text-slate-700 shadow-sm transition-all active:scale-95 cursor-pointer"
+            className="flex items-center gap-1 px-2 py-1.5 md:px-3.5 md:py-1.5 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg text-[10px] md:text-[11px] font-bold text-slate-700 shadow-sm transition-all active:scale-95 cursor-pointer shrink-0"
+            title="Download CSV"
           >
-            <Icons.Download className="w-3.5 h-3.5" />
-            <span>Download Template</span>
+            <Icons.Download className="w-3.5 h-3.5 text-slate-500" />
+            <span className="hidden sm:inline">Download Template</span>
           </button>
           
           <button
             onClick={() => openModal()}
-            className="flex items-center gap-1 px-3.5 py-1.5 bg-[#13854e] hover:bg-[#0f6c3e] text-white rounded-lg text-[11px] font-bold shadow-sm transition-all active:scale-95 cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1.5 md:px-3.5 md:py-1.5 bg-[#13854e] hover:bg-[#0f6c3e] text-white rounded-lg text-[10px] md:text-[11px] font-bold shadow-sm transition-all active:scale-95 cursor-pointer shrink-0"
+            title="Add Habit"
           >
             <Icons.Plus className="w-3.5 h-3.5" />
-            <span>Add Habit</span>
+            <span className="hidden sm:inline">Add Habit</span>
           </button>
         </div>
       </header>
@@ -432,14 +445,14 @@ export function UltimateHabitTracker() {
         
         {/* VIEW 1: SPREADSHEET GRID */}
         {activeTab === 'grid' && (
-          <div className="flex-1 flex flex-col overflow-hidden p-6 gap-6">
+          <div className="flex-1 flex flex-col overflow-hidden p-3 md:p-6 gap-3 md:gap-6">
             
             {/* Dynamic Formula bar / Top grid controls */}
-            <div className="flex items-center justify-between shrink-0 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-col md:flex-row gap-3 md:items-center justify-between shrink-0 bg-white border border-slate-200 rounded-xl p-3 md:p-4 shadow-sm">
+              <div className="flex flex-wrap items-center gap-3 md:gap-4">
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Active month</span>
-                  <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Active month</span>
+                  <div className="flex items-center gap-1">
                     <button
                       onClick={() => {
                         const newDate = new Date(currentMonthDate);
@@ -448,10 +461,10 @@ export function UltimateHabitTracker() {
                       }}
                       className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors"
                     >
-                      <Icons.ChevronLeft className="w-4 h-4" />
+                      <Icons.ChevronLeft className="w-3.5 h-3.5" />
                     </button>
-                    <span className="text-xs font-bold text-slate-800 font-mono w-28 text-center uppercase tracking-wide">
-                      {currentMonthDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                    <span className="text-[11px] md:text-xs font-bold text-slate-800 font-mono w-24 md:w-28 text-center uppercase tracking-wide">
+                      {currentMonthDate.toLocaleString('default', { month: 'short', year: 'numeric' })}
                     </span>
                     <button
                       onClick={() => {
@@ -461,29 +474,29 @@ export function UltimateHabitTracker() {
                       }}
                       className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors"
                     >
-                      <Icons.ChevronRight className="w-4 h-4" />
+                      <Icons.ChevronRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
 
-                <div className="h-8 w-px bg-slate-200" />
+                <div className="h-8 w-px bg-slate-200 hidden sm:block" />
                 
                 {/* Total Stats formula box */}
-                <div className="flex items-center gap-4 bg-[#f8fafc] border border-slate-200/60 rounded-lg px-4 py-1.5">
+                <div className="flex items-center gap-3 bg-[#f8fafc] border border-slate-200/60 rounded-lg px-3 py-1.5">
                   <div className="flex flex-col">
-                    <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider font-mono">Progress in %</span>
-                    <span className="text-base font-black text-[#13854e] font-mono leading-none mt-0.5">{gridStats.overallPct}%</span>
+                    <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-wider font-mono">Progress in %</span>
+                    <span className="text-sm md:text-base font-black text-[#13854e] font-mono leading-none mt-0.5">{gridStats.overallPct}%</span>
                   </div>
-                  <div className="flex flex-col w-28">
-                    <span className="text-[8px] text-slate-400 font-bold uppercase tracking-wider mb-1">Grid Completion</span>
-                    <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden border border-slate-300/40">
+                  <div className="flex flex-col w-20 md:w-28">
+                    <span className="text-[8px] text-slate-400 font-bold uppercase tracking-wider mb-1">Grid Progress</span>
+                    <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden border border-slate-300/45">
                       <div className="bg-[#22c55e] h-full transition-all duration-700" style={{ width: `${Math.min(100, gridStats.overallPct)}%` }} />
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="text-[10px] text-slate-400 font-mono font-semibold">
+              <div className="hidden md:block text-[10px] text-slate-400 font-mono font-semibold">
                 Formula: =SUM(Actual) / SUM(Goal)
               </div>
             </div>
@@ -492,71 +505,71 @@ export function UltimateHabitTracker() {
             <div className="flex-1 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
               
               {/* Spreadsheet Table Scroll Container */}
-              <div className="flex-1 overflow-auto custom-scrollbar">
+              <div className="flex-1 overflow-auto custom-scrollbar select-none touch-pan-x touch-pan-y">
                 
                 <table className="w-full border-separate border-spacing-0 text-left relative table-fixed">
                   <thead>
                     
                     {/* ROW 1: Excel alphabet letter headers (Freeze top) */}
                     <tr className="bg-slate-50 select-none">
-                      <th className="w-[40px] bg-slate-100 border-r border-b border-slate-200 sticky top-0 left-0 z-40 text-center text-[9px] font-black text-slate-400 font-mono h-6">
+                      <th className="w-[32px] bg-slate-100 border-r border-b border-slate-200 sticky top-0 left-0 z-40 text-center text-[9px] font-black text-slate-400 font-mono h-6 shrink-0">
                         {getExcelColumnLetter(0)}
                       </th>
-                      <th className="w-[200px] bg-slate-100 border-r border-b border-slate-200 sticky top-0 left-[40px] z-40 text-center text-[9px] font-black text-slate-400 font-mono">
+                      <th className="w-[110px] md:w-[200px] bg-slate-100 border-r border-b border-slate-200 sticky top-0 left-[32px] z-40 text-center text-[9px] font-black text-slate-400 font-mono shrink-0">
                         {getExcelColumnLetter(1)}
                       </th>
                       {daysInMonth.map((day, idx) => (
-                        <th key={`letter-${day.dateKey}`} className="w-[38px] bg-slate-100 border-r border-b border-slate-200 sticky top-0 z-30 text-center text-[9px] font-black text-slate-400 font-mono">
+                        <th key={`letter-${day.dateKey}`} className="w-[36px] bg-slate-100 border-r border-b border-slate-200 sticky top-0 z-30 text-center text-[9px] font-black text-slate-400 font-mono shrink-0">
                           {getExcelColumnLetter(idx + 2)}
                         </th>
                       ))}
                       {/* Analysis Column letters */}
-                      <th className="w-[60px] bg-slate-100 border-r border-b border-slate-200 sticky top-0 z-30 text-center text-[9px] font-black text-slate-400 font-mono">
+                      <th className="w-[44px] bg-slate-100 border-r border-b border-slate-200 sticky top-0 z-30 text-center text-[9px] font-black text-slate-400 font-mono shrink-0">
                         {getExcelColumnLetter(daysInMonth.length + 2)}
                       </th>
-                      <th className="w-[60px] bg-slate-100 border-r border-b border-slate-200 sticky top-0 z-30 text-center text-[9px] font-black text-slate-400 font-mono">
+                      <th className="w-[44px] bg-slate-100 border-r border-b border-slate-200 sticky top-0 z-30 text-center text-[9px] font-black text-slate-400 font-mono shrink-0">
                         {getExcelColumnLetter(daysInMonth.length + 3)}
                       </th>
-                      <th className="w-[140px] bg-slate-100 border-b border-slate-200 sticky top-0 z-30 text-center text-[9px] font-black text-slate-400 font-mono">
+                      <th className="w-[100px] md:w-[140px] bg-slate-100 border-b border-slate-200 sticky top-0 z-30 text-center text-[9px] font-black text-slate-400 font-mono shrink-0">
                         {getExcelColumnLetter(daysInMonth.length + 4)}
                       </th>
                     </tr>
 
                     {/* ROW 2: Week Numbers (Freeze top) */}
                     <tr className="bg-slate-50">
-                      <th className="bg-slate-50 border-r border-b border-slate-200 sticky top-[24px] left-0 z-40 h-6 text-center text-[9px] text-slate-400 font-mono font-bold select-none">
+                      <th className="bg-slate-50 border-r border-b border-slate-200 sticky top-[24px] left-0 z-40 h-6 text-center text-[9px] text-slate-400 font-mono font-bold select-none shrink-0">
                         {/* empty */}
                       </th>
-                      <th className="bg-slate-50 border-r border-b border-slate-200 sticky top-[24px] left-[40px] z-40 text-center text-[10px] text-slate-400 font-mono font-bold select-none">
+                      <th className="bg-slate-50 border-r border-b border-slate-200 sticky top-[24px] left-[32px] z-40 text-center text-[10px] text-slate-400 font-mono font-bold select-none shrink-0">
                         {/* empty */}
                       </th>
                       {weekSpans.map((week, idx) => (
                         <th
                           key={`week-${idx}`}
                           colSpan={week.span}
-                          className="bg-slate-50 border-r border-b border-slate-200 sticky top-[24px] z-30 text-center text-[10px] font-bold text-slate-400 font-mono uppercase tracking-wider border-t border-t-slate-200/50"
+                          className="bg-slate-50 border-r border-b border-slate-200 sticky top-[24px] z-30 text-center text-[10px] font-bold text-slate-400 font-mono uppercase tracking-wider border-t border-t-slate-200/50 shrink-0"
                         >
                           Week {week.weekIndex}
                         </th>
                       ))}
                       {/* Analysis Header */}
-                      <th colSpan={3} className="bg-slate-100 border-b border-slate-200 sticky top-[24px] z-30 text-center text-[10px] font-black text-slate-600 font-mono uppercase tracking-widest border-t border-t-slate-200/50">
+                      <th colSpan={3} className="bg-slate-100 border-b border-slate-200 sticky top-[24px] z-30 text-center text-[10px] font-black text-slate-600 font-mono uppercase tracking-widest border-t border-t-slate-200/50 shrink-0">
                         Analysis
                       </th>
                     </tr>
 
                     {/* ROW 3: Days names (Su, Mo...) (Freeze top) */}
                     <tr className="bg-slate-50">
-                      <th className="bg-slate-50 border-r border-b border-slate-200 sticky top-[48px] left-0 z-40 h-7 text-center text-[9px] text-slate-400 font-mono font-bold select-none">
+                      <th className="bg-slate-50 border-r border-b border-slate-200 sticky top-[48px] left-0 z-40 h-7 text-center text-[9px] text-slate-400 font-mono font-bold select-none shrink-0">
                         {/* empty */}
                       </th>
-                      <th className="bg-slate-50 border-r border-b border-slate-200 sticky top-[48px] left-[40px] z-40 text-center text-[10px] text-slate-500 font-bold select-none">
+                      <th className="bg-slate-50 border-r border-b border-slate-200 sticky top-[48px] left-[32px] z-40 text-center text-[10px] text-slate-500 font-bold select-none shrink-0">
                         {/* empty */}
                       </th>
                       {daysInMonth.map(day => (
                         <th
                           key={`name-${day.dateKey}`}
-                          className={`border-r border-b border-slate-200 sticky top-[48px] z-30 text-center text-[10px] font-bold select-none py-1 ${
+                          className={`border-r border-b border-slate-200 sticky top-[48px] z-30 text-center text-[10px] font-bold select-none py-1 shrink-0 ${
                             day.isWeekend ? 'bg-slate-100/70 text-slate-400' : 'bg-slate-50 text-slate-600'
                           }`}
                         >
@@ -564,29 +577,29 @@ export function UltimateHabitTracker() {
                         </th>
                       ))}
                       {/* Analysis Column Subtitles */}
-                      <th className="bg-slate-50 border-r border-b border-slate-200 sticky top-[48px] z-30 text-center text-[10px] font-bold text-slate-500 py-1">
+                      <th className="bg-slate-50 border-r border-b border-slate-200 sticky top-[48px] z-30 text-center text-[10px] font-bold text-slate-500 py-1 shrink-0">
                         Goal
                       </th>
-                      <th className="bg-slate-50 border-r border-b border-slate-200 sticky top-[48px] z-30 text-center text-[10px] font-bold text-slate-500 py-1">
-                        Actual
+                      <th className="bg-slate-50 border-r border-b border-slate-200 sticky top-[48px] z-30 text-center text-[10px] font-bold text-slate-500 py-1 shrink-0">
+                        Act
                       </th>
-                      <th className="bg-slate-50 border-b border-slate-200 sticky top-[48px] z-30 text-center text-[10px] font-bold text-slate-500 py-1">
+                      <th className="bg-slate-50 border-b border-slate-200 sticky top-[48px] z-30 text-center text-[10px] font-bold text-slate-500 py-1 shrink-0">
                         Progress
                       </th>
                     </tr>
 
                     {/* ROW 4: Date Numbers (1, 2, 3...) (Freeze top) */}
                     <tr className="bg-slate-50">
-                      <th className="bg-slate-50 border-r border-b border-slate-200 sticky top-[76px] left-0 z-40 h-7 text-center text-[9px] text-slate-400 font-mono font-bold select-none">
+                      <th className="bg-slate-50 border-r border-b border-slate-200 sticky top-[76px] left-0 z-40 h-7 text-center text-[9px] text-slate-400 font-mono font-bold select-none shrink-0">
                         {/* empty */}
                       </th>
-                      <th className="bg-slate-50 border-r border-b border-slate-200 sticky top-[76px] left-[40px] z-40 text-center text-[10px] text-slate-500 font-bold select-none">
+                      <th className="bg-slate-50 border-r border-b border-slate-200 sticky top-[76px] left-[32px] z-40 text-center text-[10px] text-slate-500 font-bold select-none shrink-0">
                         My Habits
                       </th>
                       {daysInMonth.map(day => (
                         <th
                           key={`num-${day.dateKey}`}
-                          className={`border-r border-b border-slate-200 sticky top-[76px] z-30 text-center text-xs font-mono font-bold select-none ${
+                          className={`border-r border-b border-slate-200 sticky top-[76px] z-30 text-center text-xs font-mono font-bold select-none shrink-0 ${
                             day.isWeekend ? 'bg-slate-100/70 text-slate-400' : 'bg-slate-50 text-slate-600'
                           }`}
                         >
@@ -594,13 +607,13 @@ export function UltimateHabitTracker() {
                         </th>
                       ))}
                       {/* Analysis column placeholder headers */}
-                      <th className="bg-slate-50 border-r border-b border-slate-200 sticky top-[76px] z-30 font-bold text-center select-none text-[9px] text-slate-400">
-                        (Days)
+                      <th className="bg-slate-50 border-r border-b border-slate-200 sticky top-[76px] z-30 font-bold text-center select-none text-[9px] text-slate-400 shrink-0">
+                        (D)
                       </th>
-                      <th className="bg-slate-50 border-r border-b border-slate-200 sticky top-[76px] z-30 font-bold text-center select-none text-[9px] text-slate-400">
-                        (Days)
+                      <th className="bg-slate-50 border-r border-b border-slate-200 sticky top-[76px] z-30 font-bold text-center select-none text-[9px] text-slate-400 shrink-0">
+                        (D)
                       </th>
-                      <th className="bg-slate-50 border-b border-slate-200 sticky top-[76px] z-30 font-bold text-center select-none text-[9px] text-slate-400">
+                      <th className="bg-slate-50 border-b border-slate-200 sticky top-[76px] z-30 font-bold text-center select-none text-[9px] text-slate-400 shrink-0">
                         (%)
                       </th>
                     </tr>
@@ -628,14 +641,14 @@ export function UltimateHabitTracker() {
                           </td>
 
                           {/* Col 1: Sticky Habit Name and Emoji with Minty background (Freeze Left) */}
-                          <td className="bg-[#e2f0d9] border-r border-b border-[#cbd5e1] sticky left-[40px] z-20 px-3 truncate text-xs font-bold text-slate-800 flex items-center justify-between h-8">
-                            <span className="truncate flex items-center gap-1.5">
-                              <span className="text-sm select-none">{habit.emoji || '⭐'}</span>
+                          <td className="bg-[#e2f0d9] border-r border-b border-[#cbd5e1] sticky left-[32px] z-20 px-2 truncate text-[10px] md:text-xs font-bold text-slate-800 flex items-center justify-between h-8 select-none shrink-0 w-[110px] md:w-[200px]">
+                            <span className="truncate flex items-center gap-1">
+                              <span className="text-xs md:text-sm select-none">{habit.emoji || '⭐'}</span>
                               <span className="truncate leading-none">{habit.name}</span>
                             </span>
                             <button
                               onClick={() => openModal(habit)}
-                              className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-[#cbd5e1] text-slate-500 hover:text-slate-800 transition-all ml-1 cursor-pointer shrink-0"
+                              className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-[#cbd5e1] text-slate-500 hover:text-slate-800 transition-all ml-0.5 cursor-pointer shrink-0"
                             >
                               <Icons.Edit className="w-3 h-3" />
                             </button>
@@ -647,7 +660,7 @@ export function UltimateHabitTracker() {
                             return (
                               <td
                                 key={`${habit.id}-${day.dateKey}`}
-                                className={`border-r border-b border-slate-200 text-center p-0 h-8 select-none transition-colors ${
+                                className={`border-r border-b border-slate-200 text-center p-0 h-8 select-none transition-colors shrink-0 ${
                                   day.isWeekend ? 'bg-slate-50/50' : 'bg-white'
                                 }`}
                               >
@@ -655,7 +668,6 @@ export function UltimateHabitTracker() {
                                   onClick={() => handleToggleDone(habit.id, day.dateKey)}
                                   className="w-full h-full flex items-center justify-center cursor-pointer hover:bg-slate-100/50 active:bg-slate-200/50 transition-all"
                                 >
-                                  {/* Authentic excel checkbox style checkmark block */}
                                   <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${
                                     isDone
                                       ? 'bg-slate-800 border-slate-800 text-white'
@@ -669,21 +681,18 @@ export function UltimateHabitTracker() {
                           })}
 
                           {/* Right Side: Analysis Data */}
-                          {/* Goal Target Days */}
-                          <td className="bg-slate-50 border-r border-b border-slate-200 px-2 font-mono font-bold text-center text-xs text-slate-600">
+                          <td className="bg-slate-50 border-r border-b border-slate-200 px-1 font-mono font-bold text-center text-[10px] md:text-xs text-slate-600 shrink-0">
                             {goalVal}
                           </td>
-                          {/* Actual Completed Days */}
-                          <td className="bg-slate-50 border-r border-b border-slate-200 px-2 font-mono font-bold text-center text-xs text-[#13854e]">
+                          <td className="bg-slate-50 border-r border-b border-slate-200 px-1 font-mono font-bold text-center text-[10px] md:text-xs text-[#13854e] shrink-0">
                             {actualMonthCount}
                           </td>
-                          {/* Progress bar and text */}
-                          <td className="bg-slate-50 border-b border-slate-200 px-3 text-center text-xs py-1 h-8">
-                            <div className="flex items-center gap-2 w-full h-full">
-                              <div className="flex-1 bg-slate-200 h-2 rounded-full overflow-hidden border border-slate-300/40">
+                          <td className="bg-slate-50 border-b border-slate-200 px-2 text-center text-xs py-1 h-8 shrink-0">
+                            <div className="flex items-center gap-1.5 w-full h-full">
+                              <div className="flex-1 bg-slate-200 h-1.5 rounded-full overflow-hidden border border-slate-300/40">
                                 <div className="bg-[#22c55e] h-full transition-all duration-500" style={{ width: `${progressPercentage}%` }} />
                               </div>
-                              <span className="font-mono font-bold text-[10px] text-slate-600 shrink-0 w-8 text-right">
+                              <span className="font-mono font-bold text-[9px] text-slate-650 shrink-0 w-6 text-right">
                                 {progressPercentage}%
                               </span>
                             </div>
@@ -693,12 +702,12 @@ export function UltimateHabitTracker() {
                       );
                     })}
 
-                    {/* STATISTICS ROW 1: Progress % (Dynamic formula cells) */}
+                    {/* STATISTICS ROW 1: Progress % */}
                     <tr className="bg-slate-50 h-8 font-bold">
                       <td className="bg-slate-100 border-r border-b border-slate-200 sticky left-0 z-20 text-center text-[9px] font-mono font-black text-slate-400 select-none">
                         Σ
                       </td>
-                      <td className="bg-slate-100 border-r border-b border-slate-200 sticky left-[40px] z-20 px-3 text-[10px] text-slate-500 font-mono tracking-tight font-black">
+                      <td className="bg-slate-100 border-r border-b border-slate-200 sticky left-[32px] z-20 px-2 text-[9px] md:text-[10px] text-slate-500 font-mono tracking-tight font-black select-none truncate">
                         Progress in %
                       </td>
                       {daysInMonth.map(day => {
@@ -708,15 +717,14 @@ export function UltimateHabitTracker() {
                         });
                         const pct = habits.length > 0 ? Math.round((completedCount / habits.length) * 100) : 0;
                         return (
-                          <td key={`prog-pct-${day.dateKey}`} className={`border-r border-b border-slate-200 text-center font-mono text-[10px] text-slate-700 ${
+                          <td key={`prog-pct-${day.dateKey}`} className={`border-r border-b border-slate-200 text-center font-mono text-[9px] md:text-[10px] text-slate-700 shrink-0 ${
                             day.isWeekend ? 'bg-slate-100/70' : 'bg-slate-50'
                           }`}>
                             {pct}%
                           </td>
                         );
                       })}
-                      {/* Analysis Column Placeholders */}
-                      <td colSpan={3} className="bg-slate-100 border-b border-slate-200" />
+                      <td colSpan={3} className="bg-slate-100 border-b border-slate-200 shrink-0" />
                     </tr>
 
                     {/* STATISTICS ROW 2: Checked Counts */}
@@ -724,8 +732,8 @@ export function UltimateHabitTracker() {
                       <td className="bg-slate-100 border-r border-b border-slate-200 sticky left-0 z-20 text-center text-[9px] font-mono font-black text-slate-400 select-none">
                         ✓
                       </td>
-                      <td className="bg-slate-100 border-r border-b border-slate-200 sticky left-[40px] z-20 px-3 text-[10px] text-slate-500 font-mono tracking-tight font-black">
-                        Completed (Checked)
+                      <td className="bg-slate-100 border-r border-b border-slate-200 sticky left-[32px] z-20 px-2 text-[9px] md:text-[10px] text-slate-500 font-mono tracking-tight font-black select-none truncate">
+                        Completed
                       </td>
                       {daysInMonth.map(day => {
                         let completedCount = 0;
@@ -733,15 +741,14 @@ export function UltimateHabitTracker() {
                           if (h.done[day.dateKey]) completedCount++;
                         });
                         return (
-                          <td key={`prog-chk-${day.dateKey}`} className={`border-r border-b border-slate-200 text-center font-mono text-xs text-[#13854e] ${
+                          <td key={`prog-chk-${day.dateKey}`} className={`border-r border-b border-slate-200 text-center font-mono text-[10px] md:text-xs text-[#13854e] shrink-0 ${
                             day.isWeekend ? 'bg-slate-100/70' : 'bg-slate-50'
                           }`}>
                             {completedCount}
                           </td>
                         );
                       })}
-                      {/* Analysis Column Placeholders */}
-                      <td colSpan={3} className="bg-slate-100 border-b border-slate-200" />
+                      <td colSpan={3} className="bg-slate-100 border-b border-slate-200 shrink-0" />
                     </tr>
 
                     {/* STATISTICS ROW 3: Remaining Counts */}
@@ -749,8 +756,8 @@ export function UltimateHabitTracker() {
                       <td className="bg-slate-100 border-r border-b border-slate-200 sticky left-0 z-20 text-center text-[9px] font-mono font-black text-slate-400 select-none">
                         ✗
                       </td>
-                      <td className="bg-slate-100 border-r border-b border-slate-200 sticky left-[40px] z-20 px-3 text-[10px] text-slate-500 font-mono tracking-tight font-black">
-                        Remaining (Unchecked)
+                      <td className="bg-slate-100 border-r border-b border-slate-200 sticky left-[32px] z-20 px-2 text-[9px] md:text-[10px] text-slate-500 font-mono tracking-tight font-black select-none truncate">
+                        Remaining
                       </td>
                       {daysInMonth.map(day => {
                         let completedCount = 0;
@@ -759,15 +766,14 @@ export function UltimateHabitTracker() {
                         });
                         const remaining = habits.length - completedCount;
                         return (
-                          <td key={`prog-rem-${day.dateKey}`} className={`border-r border-b border-slate-200 text-center font-mono text-xs text-rose-500 ${
+                          <td key={`prog-rem-${day.dateKey}`} className={`border-r border-b border-slate-200 text-center font-mono text-[10px] md:text-xs text-rose-500 shrink-0 ${
                             day.isWeekend ? 'bg-slate-100/70' : 'bg-slate-50'
                           }`}>
                             {remaining}
                           </td>
                         );
                       })}
-                      {/* Analysis Column Placeholders */}
-                      <td colSpan={3} className="bg-slate-100 border-b border-slate-200" />
+                      <td colSpan={3} className="bg-slate-100 border-b border-slate-200 shrink-0" />
                     </tr>
 
                   </tbody>
@@ -780,33 +786,33 @@ export function UltimateHabitTracker() {
 
         {/* VIEW 2: DAILY DONUT DASHBOARD */}
         {activeTab === 'dashboard' && (
-          <div className="flex-1 flex flex-col overflow-hidden p-6 gap-6">
+          <div className="flex-1 flex flex-col overflow-hidden p-3 md:p-6 gap-3 md:gap-6">
             
             {/* Top dashboard control bar */}
-            <div className="flex items-center justify-between shrink-0 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-col md:flex-row gap-3 md:items-center justify-between shrink-0 bg-white border border-slate-200 rounded-xl p-3 md:p-4 shadow-sm">
+              <div className="flex flex-wrap items-center gap-3 md:gap-4">
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Dashboard Navigation</span>
-                  <div className="flex items-center gap-2">
+                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Dashboard Navigation</span>
+                  <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => {
                         const newD = new Date(currentWeekStart);
                         newD.setDate(currentWeekStart.getDate() - 7);
                         setCurrentWeekStart(newD);
                       }}
-                      className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-[11px] font-bold text-slate-600 transition-colors"
+                      className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-[10px] md:text-[11px] font-bold text-slate-650 transition-colors"
                     >
-                      <Icons.ArrowLeft className="w-3.5 h-3.5" />
-                      <span>Prev Week</span>
+                      <Icons.ArrowLeft className="w-3 h-3" />
+                      <span>Prev</span>
                     </button>
                     
-                    <span className="text-xs font-mono font-bold text-slate-700 px-2 select-text">
+                    <span className="text-[11px] md:text-xs font-mono font-bold text-slate-700 px-1 select-text shrink-0">
                       {currentWeekStart.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                      {' - '}
+                      {'-'}
                       {(() => {
                         const end = new Date(currentWeekStart);
                         end.setDate(currentWeekStart.getDate() + 6);
-                        return end.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+                        return end.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
                       })()}
                     </span>
 
@@ -816,25 +822,24 @@ export function UltimateHabitTracker() {
                         newD.setDate(currentWeekStart.getDate() + 7);
                         setCurrentWeekStart(newD);
                       }}
-                      className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-[11px] font-bold text-slate-600 transition-colors"
+                      className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-[10px] md:text-[11px] font-bold text-slate-650 transition-colors"
                     >
-                      <span>Next Week</span>
-                      <Icons.ArrowRight className="w-3.5 h-3.5" />
+                      <span>Next</span>
+                      <Icons.ArrowRight className="w-3 h-3" />
                     </button>
                   </div>
                 </div>
 
-                <div className="h-8 w-px bg-slate-200" />
+                <div className="h-8 w-px bg-slate-200 hidden sm:block" />
 
                 {/* Overall completion bar */}
-                <div className="flex items-center gap-4 bg-[#f8fafc] border border-slate-200/60 rounded-lg px-4 py-1.5">
+                <div className="flex items-center gap-3 bg-[#f8fafc] border border-slate-200/60 rounded-lg px-3 py-1.5">
                   <div className="flex flex-col">
-                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider font-mono">Completed Target</span>
-                    <span className="text-sm font-black text-slate-800 leading-none mt-0.5">{weeklyOverallStats.completed} / {weeklyOverallStats.possible} Completed</span>
+                    <span className="text-[8px] md:text-[9px] text-slate-400 font-bold uppercase tracking-wider font-mono">Week Completion</span>
+                    <span className="text-[11px] md:text-xs font-black text-slate-800 leading-none mt-0.5">{weeklyOverallStats.completed}/{weeklyOverallStats.possible} Done</span>
                   </div>
-                  <div className="flex flex-col w-32">
-                    <span className="text-[8px] text-slate-400 font-bold uppercase tracking-wider mb-1">Weekly completion pct</span>
-                    <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden border border-slate-300/40">
+                  <div className="flex flex-col w-20 md:w-32">
+                    <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden border border-slate-300/40 mt-1">
                       <div className="bg-[#22c55e] h-full transition-all duration-700" style={{ width: `${weeklyOverallStats.pct}%` }} />
                     </div>
                   </div>
@@ -842,31 +847,115 @@ export function UltimateHabitTracker() {
                 </div>
               </div>
 
-              <div className="text-[10px] text-slate-400 font-mono font-semibold">
+              <div className="hidden md:block text-[10px] text-slate-400 font-mono font-semibold">
                 Excel view: columns C:I
               </div>
             </div>
 
-            {/* Main dashboard list columns scrollable */}
-            <div className="flex-1 overflow-x-auto custom-scrollbar flex gap-5 pb-4 select-none">
-              
+            {/* Mobile Day Selector (Visible on mobile only, width matching iPhone 16 viewport) */}
+            <div className="flex md:hidden items-center justify-between bg-white border border-slate-200 rounded-xl p-1.5 shrink-0 select-none">
+              {dashboardWeekDays.map(day => {
+                const isActive = day.dateKey === selectedDashboardDayKey;
+                // Get short name (e.g. M, T, W)
+                const dayInitial = day.dayName.slice(0, 3);
+                return (
+                  <button
+                    key={`mobile-sel-${day.dateKey}`}
+                    onClick={() => setSelectedDashboardDayKey(day.dateKey)}
+                    className={`flex flex-col items-center justify-center py-1 px-1 text-center rounded-lg flex-1 transition-all active:scale-95 cursor-pointer border ${
+                      isActive
+                        ? 'bg-[#e2f0d9] border-[#13854e]/30 text-slate-900 font-bold'
+                        : 'text-slate-500 border-transparent hover:bg-slate-50'
+                    }`}
+                  >
+                    <span className="text-[8px] uppercase tracking-wider font-mono font-bold leading-none">{dayInitial}</span>
+                    <span className="text-[11px] font-mono font-black mt-1 leading-none">{day.dateStr.split('.')[0]}</span>
+                    {day.pct > 0 && (
+                      <span className="w-1 h-1 bg-[#13854e] rounded-full mt-1 shrink-0" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Mobile Column Display (Render single card only, full height and scrollable) */}
+            <div className="flex-1 md:hidden overflow-hidden flex justify-center pb-2 select-none">
+              {dashboardWeekDays
+                .filter(day => day.dateKey === selectedDashboardDayKey)
+                .map(day => (
+                  <div
+                    key={`mobile-card-${day.dateKey}`}
+                    className="w-full max-w-[340px] bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col overflow-hidden"
+                  >
+                    {/* Day Date Header Box (Green banner) */}
+                    <div className="bg-[#e2f0d9] border-b border-slate-200 p-2.5 flex flex-col items-center justify-center shrink-0">
+                      <span className="text-xs font-black text-slate-800 leading-none">{day.dayName}</span>
+                      <span className="text-[9px] text-slate-500 font-mono font-semibold mt-1">{day.dateStr}</span>
+                    </div>
+
+                    {/* Circular progress display */}
+                    <div className="p-3 border-b border-slate-100 flex items-center justify-center shrink-0">
+                      <DonutChart percentage={day.pct} size={64} strokeWidth={6} />
+                    </div>
+
+                    {/* Tasks list checklist block */}
+                    <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 bg-[#fcfdfc] custom-scrollbar">
+                      <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1 shrink-0">
+                        Tasks List
+                      </div>
+                      
+                      <div className="flex flex-col gap-1.5 pb-4">
+                        {habits.map(habit => {
+                          const isChecked = !!habit.done[day.dateKey];
+                          return (
+                            <div
+                              key={`mobile-task-${day.dateKey}-${habit.id}`}
+                              onClick={() => handleToggleDone(habit.id, day.dateKey)}
+                              className={`p-2.5 rounded-lg border flex items-start gap-2.5 cursor-pointer transition-all active:scale-[0.98] ${
+                                isChecked
+                                  ? 'bg-slate-50 border-slate-200/80 text-slate-400'
+                                  : 'bg-white hover:bg-slate-50/50 border-slate-200 text-slate-700'
+                              }`}
+                            >
+                              {/* Checkbox square */}
+                              <div className={`w-4 h-4 rounded border shrink-0 mt-0.5 flex items-center justify-center transition-all ${
+                                isChecked
+                                  ? 'bg-slate-800 border-slate-800 text-white'
+                                  : 'border-slate-300 bg-white'
+                              }`}>
+                                {isChecked && <Icons.Check className="w-3 h-3 stroke-[3]" />}
+                              </div>
+                              
+                              <div className="flex flex-col leading-tight select-none">
+                                <span className={`text-[11px] font-bold break-words leading-tight ${isChecked ? 'line-through text-slate-450 font-normal' : 'text-slate-800 font-medium'}`}>
+                                  {habit.name} {habit.emoji}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            {/* Desktop Columns Display (Visible on desktop only) */}
+            <div className="hidden md:flex flex-1 overflow-x-auto custom-scrollbar gap-5 pb-4 select-none">
               {dashboardWeekDays.map(day => (
                 <div
                   key={day.dateKey}
                   className="w-[220px] bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col overflow-hidden shrink-0"
                 >
-                  {/* Day Date Header Box (Green banner) */}
                   <div className="bg-[#e2f0d9] border-b border-slate-200 p-3 flex flex-col items-center justify-center shrink-0">
                     <span className="text-xs font-black text-slate-800 leading-none">{day.dayName}</span>
                     <span className="text-[9px] text-slate-500 font-mono font-semibold mt-1">{day.dateStr}</span>
                   </div>
 
-                  {/* Circular progress display */}
                   <div className="p-4 border-b border-slate-100 flex items-center justify-center shrink-0">
                     <DonutChart percentage={day.pct} />
                   </div>
 
-                  {/* Tasks list checklist block */}
                   <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 bg-[#fcfdfc]">
                     <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1 shrink-0">
                       Tasks List
@@ -885,7 +974,6 @@ export function UltimateHabitTracker() {
                                 : 'bg-white hover:bg-slate-50/50 border-slate-200 text-slate-700'
                             }`}
                           >
-                            {/* Checkbox square */}
                             <div className={`w-3.5 h-3.5 rounded border shrink-0 mt-0.5 flex items-center justify-center transition-all ${
                               isChecked
                                 ? 'bg-slate-800 border-slate-800 text-white'
@@ -894,7 +982,6 @@ export function UltimateHabitTracker() {
                               {isChecked && <Icons.Check className="w-2.5 h-2.5 stroke-[3]" />}
                             </div>
                             
-                            {/* Task item label */}
                             <div className="flex flex-col leading-tight select-none">
                               <span className={`text-[11px] font-bold break-words leading-tight ${isChecked ? 'line-through text-slate-400 font-normal' : 'text-slate-800 font-medium'}`}>
                                 {habit.name} {habit.emoji}
@@ -907,31 +994,30 @@ export function UltimateHabitTracker() {
                   </div>
                 </div>
               ))}
-
             </div>
+
           </div>
         )}
 
         {/* VIEW 3: CONFIGURE/MANAGE HABITS */}
         {activeTab === 'manage' && (
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-8 max-w-4xl mx-auto w-full flex flex-col gap-6">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-4 shrink-0">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 max-w-4xl mx-auto w-full flex flex-col gap-4 md:gap-6">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3 md:pb-4 shrink-0">
               <div>
-                <h2 className="text-base font-bold text-slate-900 leading-none">Habit Configuration Manager</h2>
-                <p className="text-xs text-slate-400 mt-1">Add, update, or remove habits, customized goal counts and emoji icons.</p>
+                <h2 className="text-sm md:text-base font-bold text-slate-900 leading-none">Habit Manager</h2>
+                <p className="text-[10px] md:text-xs text-slate-400 mt-1">Configure habit goals, emojis, and alignment parameters.</p>
               </div>
               <button
                 onClick={() => openModal()}
-                className="flex items-center gap-1 px-3.5 py-1.5 bg-[#13854e] hover:bg-[#0f6c3e] text-white rounded-lg text-xs font-bold shadow-sm transition-all"
+                className="flex items-center gap-1 px-3 py-1.5 bg-[#13854e] hover:bg-[#0f6c3e] text-white rounded-lg text-xs font-bold shadow-sm transition-all cursor-pointer shrink-0"
               >
-                <Icons.Plus className="w-4 h-4" />
-                <span>Establish Habit</span>
+                <Icons.Plus className="w-3.5 h-3.5" />
+                <span>Establish</span>
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-12">
               {habits.map(habit => {
-                // Count completions
                 const totalCheckins = Object.values(habit.done).filter(Boolean).length;
                 const { current } = calculateStreak(habit.done);
 
@@ -946,14 +1032,14 @@ export function UltimateHabitTracker() {
                           {habit.emoji || '⭐'}
                         </div>
                         <div>
-                          <h3 className="text-xs font-black text-slate-800 leading-none leading-tight">{habit.name}</h3>
+                          <h3 className="text-xs font-black text-slate-800 leading-tight">{habit.name}</h3>
                           <span className="text-[9px] font-mono text-slate-400 font-bold uppercase tracking-wider mt-1.5 block">
-                            Target Goal: {habit.goalDays || 30} Completed Days / month
+                            Goal Target: {habit.goalDays || 30} Days / month
                           </span>
                         </div>
                       </div>
 
-                      <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-500 uppercase tracking-wide">
+                      <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-500 uppercase tracking-wide shrink-0">
                         {CATS[habit.cat]?.name || 'Routine'}
                       </span>
                     </div>
@@ -1001,10 +1087,43 @@ export function UltimateHabitTracker() {
 
       </div>
 
+      {/* Mobile iOS-style Bottom Navigation Tab Bar (Only visible on mobile screen widths) */}
+      <div className="md:hidden h-16 bg-white border-t border-slate-200 flex items-center justify-around z-45 shrink-0 select-none pb-safe shadow-lg">
+        <button
+          onClick={() => setActiveTab('grid')}
+          className={`flex flex-col items-center justify-center gap-0.5 text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+            activeTab === 'grid' ? 'text-[#13854e]' : 'text-slate-400'
+          }`}
+        >
+          <Icons.Table className="w-5 h-5" />
+          <span className="mt-0.5">Grid</span>
+        </button>
+        
+        <button
+          onClick={() => setActiveTab('dashboard')}
+          className={`flex flex-col items-center justify-center gap-0.5 text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+            activeTab === 'dashboard' ? 'text-[#13854e]' : 'text-slate-400'
+          }`}
+        >
+          <Icons.LayoutDashboard className="w-5 h-5" />
+          <span className="mt-0.5">Dashboard</span>
+        </button>
+        
+        <button
+          onClick={() => setActiveTab('manage')}
+          className={`flex flex-col items-center justify-center gap-0.5 text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+            activeTab === 'manage' ? 'text-[#13854e]' : 'text-slate-400'
+          }`}
+        >
+          <Icons.Settings className="w-5 h-5" />
+          <span className="mt-0.5">Configure</span>
+        </button>
+      </div>
+
       {/* MODAL: ADD / EDIT HABIT */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-          <div className="bg-white border border-slate-200 w-full max-w-[420px] rounded-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-xs p-3 md:p-4 animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 w-full max-w-[420px] mx-3 sm:mx-0 rounded-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]">
             
             {/* Modal Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-100 shrink-0">
@@ -1021,7 +1140,7 @@ export function UltimateHabitTracker() {
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleSaveForm} className="p-5 flex flex-col gap-4 overflow-y-auto max-h-[75vh] custom-scrollbar">
+            <form onSubmit={handleSaveForm} className="p-4 md:p-5 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
               
               {/* Habit Name */}
               <div className="flex flex-col gap-1.5">
@@ -1069,7 +1188,7 @@ export function UltimateHabitTracker() {
               <div className="flex flex-col gap-2">
                 <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest font-mono">Choose Emoji / Badge</label>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-2xl border border-slate-200">
+                  <div className="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center text-xl border border-slate-200 shrink-0">
                     {habitEmoji}
                   </div>
                   <input
@@ -1077,19 +1196,19 @@ export function UltimateHabitTracker() {
                     maxLength={2}
                     value={habitEmoji}
                     onChange={(e) => setHabitEmoji(e.target.value)}
-                    className="border border-slate-300 rounded-lg px-2 py-1 text-xs outline-none focus:border-[#13854e] w-14 text-center font-bold text-slate-800"
+                    className="border border-slate-300 rounded-lg px-2 py-1 text-xs outline-none focus:border-[#13854e] w-12 text-center font-bold text-slate-800 shrink-0"
                   />
                   <span className="text-[9px] text-slate-400">Custom character or emoji</span>
                 </div>
                 
                 {/* Popular emojis quick picker */}
-                <div className="grid grid-cols-8 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                <div className="grid grid-cols-8 gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
                   {POPULAR_EMOJIS.map(emoji => (
                     <button
                       key={emoji}
                       type="button"
                       onClick={() => setHabitEmoji(emoji)}
-                      className={`text-lg p-1 hover:bg-slate-200 rounded transition-all select-none cursor-pointer ${
+                      className={`text-lg p-1 hover:bg-slate-200 rounded transition-all select-none cursor-pointer text-center ${
                         habitEmoji === emoji ? 'bg-slate-200 border border-slate-300' : ''
                       }`}
                     >
